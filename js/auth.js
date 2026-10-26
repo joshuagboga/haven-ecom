@@ -34,6 +34,28 @@ const auth = {
     return session;
   },
 
+  // DummyJSON simulates sign-up: the user is returned but never persisted and
+  // gets no tokens, so the session lives only in this browser.
+  async signup(details) {
+    const existing = await fetch(
+      `${AUTH_API}/users/filter?key=username&value=${encodeURIComponent(details.username)}&select=id`,
+    ).then((response) => (response.ok ? response.json() : { users: [] }));
+    if (existing.users.length) throw new Error("That username is already taken.");
+
+    const response = await fetch(`${AUTH_API}/users/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(details),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || "We couldn't create your account. Please try again.");
+
+    const { password, ...user } = data;
+    const session = { local: true, user };
+    auth.saveSession(session);
+    return session;
+  },
+
   async refresh() {
     const session = auth.getSession();
     if (!session?.refreshToken) return false;
