@@ -37,7 +37,7 @@ function renderSkeleton() {
   root.innerHTML = `
     ${block("h-12 w-2/3 max-w-lg")}
     <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">${block("h-32").repeat(4)}</div>
-    <div class="mt-8 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">${block("h-96")}${block("h-96")}</div>`;
+    <div class="mt-8 max-w-2xl">${block("h-96")}</div>`;
 }
 
 function renderError() {
@@ -64,14 +64,19 @@ function renderDetail(label, value) {
 
 function renderProfile() {
   const { user } = dashboard;
-  const address = user.address
+  const address = user.address?.address
     ? `${user.address.address}, ${user.address.city}, ${user.address.stateCode} ${user.address.postalCode}`
     : "";
-  const company = user.company ? `${user.company.title}, ${user.company.name}` : "";
+  const company = user.company?.name ? `${user.company.title}, ${user.company.name}` : "";
+  const avatar = user.image
+    ? `<img src="${escapeHtml(user.image)}" alt="" class="h-16 w-16 rounded-full bg-[#f7f6f2]" />`
+    : `<span class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#1d4d35] text-xl font-bold text-white">${escapeHtml(
+        `${user.firstName[0]}${user.lastName[0]}`.toUpperCase(),
+      )}</span>`;
 
   return `<section class="h-fit rounded-3xl bg-white p-6 sm:p-8" aria-label="Profile">
     <div class="flex items-center gap-4">
-      <img src="${escapeHtml(user.image)}" alt="" class="h-16 w-16 rounded-full bg-[#f7f6f2]" />
+      ${avatar}
       <div class="min-w-0">
         <p class="truncate text-xl font-bold tracking-[-0.03em]">${escapeHtml(`${user.firstName} ${user.lastName}`)}</p>
         <p class="truncate text-sm text-black/45">@${escapeHtml(user.username)}</p>
@@ -87,49 +92,11 @@ function renderProfile() {
   </section>`;
 }
 
-function renderOrder(cart) {
-  const items = cart.products
-    .map(
-      (item) => `<li class="flex items-center gap-4 py-3">
-        <div class="h-16 w-14 shrink-0 rounded-xl bg-[#f7f6f2] p-2">
-          <img src="${escapeHtml(item.thumbnail)}" alt="" loading="lazy" class="h-full w-full object-contain mix-blend-multiply" />
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-semibold">${escapeHtml(item.title)}</p>
-          <p class="mt-1 text-xs text-black/45">${item.quantity} × ${formatPrice(item.price)}</p>
-        </div>
-        <p class="text-sm font-bold">${formatPrice(item.discountedTotal)}</p>
-      </li>`,
-    )
-    .join("");
-
-  return `<article class="rounded-3xl bg-white p-6">
-    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-black/8 pb-4">
-      <div>
-        <p class="font-bold">Order #${cart.id}</p>
-        <p class="mt-1 text-xs text-black/45">${cart.totalProducts} products · ${cart.totalQuantity} items</p>
-      </div>
-      <div class="text-right">
-        <p class="text-lg font-bold">${formatPrice(cart.discountedTotal)}</p>
-        <p class="text-xs text-black/35 line-through">${formatPrice(cart.total)}</p>
-      </div>
-    </div>
-    <ul class="divide-y divide-black/5">${items}</ul>
-  </article>`;
-}
-
 function renderDashboard() {
   if (dashboard.loading) return renderSkeleton();
   if (dashboard.error) return renderError();
 
   const stats = getStats();
-  const orders = dashboard.carts.length
-    ? dashboard.carts.map(renderOrder).join("")
-    : `<div class="rounded-3xl bg-white py-20 text-center">
-        <p class="text-xl font-bold">No orders yet</p>
-        <p class="mt-2 text-black/50">When you place an order it will show up here.</p>
-        <a href="index.html#shop" class="mt-6 inline-flex rounded-full bg-[#172019] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#d75f36]">Start shopping</a>
-      </div>`;
 
   root.innerHTML = `
     <p class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#d75f36]">Your account</p>
@@ -142,13 +109,7 @@ function renderDashboard() {
       ${renderStat("You saved", formatPrice(stats.saved))}
     </div>
 
-    <div class="mt-8 grid items-start gap-6 lg:grid-cols-[.8fr_1.2fr]">
-      ${renderProfile()}
-      <section aria-label="Order history">
-        <h2 class="mb-4 text-2xl font-bold tracking-[-0.04em]">Order history</h2>
-        <div class="space-y-4">${orders}</div>
-      </section>
-    </div>`;
+    <div class="mt-8 max-w-2xl">${renderProfile()}</div>`;
 }
 
 function redirectToLogin() {
@@ -159,6 +120,14 @@ async function loadDashboard() {
   dashboard.loading = true;
   dashboard.error = "";
   renderDashboard();
+
+  const session = auth.getSession();
+  if (session.local) {
+    dashboard.user = session.user;
+    dashboard.carts = [];
+    dashboard.loading = false;
+    return renderDashboard();
+  }
 
   try {
     const user = await auth.request("/auth/me");
