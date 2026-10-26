@@ -7,6 +7,7 @@
     <link rel="icon" href="favicon.svg" />
     <link rel="stylesheet" href="css/style.css" />
     <title>haven. — Everyday goods</title>
+    <script src="js/auth.js" defer></script>
     <script src="js/app.js" defer></script>
   </head>
   <body>
@@ -24,18 +25,21 @@
             <a href="#footer" class="transition-colors hover:text-[#d75f36]">Contact</a>
           </nav>
 
-          <button
-            type="button"
-            data-open-cart
-            class="flex items-center gap-2 rounded-full border border-black/15 px-4 py-2.5 text-sm font-semibold transition hover:border-[#1d4d35] hover:bg-white"
-          >
-            <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 8h12l-1 12H7L6 8Z" />
-              <path d="M9 9V6a3 3 0 0 1 6 0v3" />
-            </svg>
-            Cart
-            <span id="cart-badge" class="grid min-w-5 place-items-center rounded-full bg-[#d75f36] px-1.5 py-0.5 text-[11px] text-white">0</span>
-          </button>
+          <div class="flex items-center gap-4">
+            <a id="account-link" href="login.html" class="text-sm font-semibold transition-colors hover:text-[#d75f36]">Sign in</a>
+            <button
+              type="button"
+              data-open-cart
+              class="flex items-center gap-2 rounded-full border border-black/15 px-4 py-2.5 text-sm font-semibold transition hover:border-[#1d4d35] hover:bg-white"
+            >
+              <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8h12l-1 12H7L6 8Z" />
+                <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+              </svg>
+              Cart
+              <span id="cart-badge" class="grid min-w-5 place-items-center rounded-full bg-[#d75f36] px-1.5 py-0.5 text-[11px] text-white">0</span>
+            </button>
+          </div>
         </div>
       </header>
 
